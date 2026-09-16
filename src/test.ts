@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { model } from "./agents/main";
+import { basicModel } from "./agents/main";
 
 
 import { z } from "zod";
@@ -18,8 +18,9 @@ const ContactSchema = z.object({
 });
 
 
-const extractor = model.withStructuredOutput(ContactSchema, {
+const extractor = basicModel.withStructuredOutput(ContactSchema, {
   method: "functionCalling",
+  strict: true,  // 严格模式
 });
 
 const text = `
