@@ -18,7 +18,9 @@ const ContactSchema = z.object({
 });
 
 
-const extractor = model.withStructuredOutput(ContactSchema);
+const extractor = model.withStructuredOutput(ContactSchema, {
+  method: "functionCalling",
+});
 
 const text = `
   本次会议参与者：
