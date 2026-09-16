@@ -1,6 +1,8 @@
 import "dotenv/config";
 
-import { basicModel } from "./agents/main";
+import { createAgent, toolStrategy } from "langchain";
+import { basicModel, dynamicModelMiddleware } from "./agents/main";
+import { getWeather } from "./tools/weather";
 
 
 import { z } from "zod";
@@ -18,9 +20,11 @@ const ContactSchema = z.object({
 });
 
 
-const extractor = basicModel.withStructuredOutput(ContactSchema, {
-  method: "functionCalling",
-  strict: true,  // 严格模式
+const extractorAgent = createAgent({
+  model: basicModel,
+  tools: [getWeather],
+  middleware: [dynamicModelMiddleware],
+  responseFormat: toolStrategy(ContactSchema),
 });
 
 const text = `
@@ -30,9 +34,11 @@ const text = `
   王五（13900002222）
 `;
 
-const result = await extractor.invoke([
-  { role: "user", content: `从以下文本中提取联系人信息：\n${text}` }
-]);
+const result = await extractorAgent.invoke({
+  messages: [
+    { role: "user", content: `从以下文本中提取联系人信息：\n${text}` },
+  ],
+});
 
-console.log(result.contacts);
+console.log(result.structuredResponse.contacts);
 

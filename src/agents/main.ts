@@ -29,7 +29,7 @@ export const advancedModel = new ChatOpenAI({
 
 
 // 创建动态模型选择中间件
-const dynamicModelMiddleware = createMiddleware({
+export const dynamicModelMiddleware = createMiddleware({
   name: "DynamicModelSelection",
   
   // 拦截模型调用请求
