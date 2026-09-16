@@ -10,6 +10,9 @@ export const basicModel = new ChatOpenAI({
 	},
 	temperature: 0.3, // 值越高，输出越有创造性但也越不可控
 	maxTokens: 2048, // 最大输出长度
+	modelKwargs: {
+		enable_thinking: false,
+	},
 	timeout: 30000, // 超时时间（毫秒）
 	maxRetries: 3, // 失败自动重试次数
 });
@@ -23,6 +26,9 @@ export const advancedModel = new ChatOpenAI({
 	},
 	temperature: 0.3, // 值越高，输出越有创造性但也越不可控
 	maxTokens: 2048, // 最大输出长度
+	modelKwargs: {
+		enable_thinking: false,
+	},
 	timeout: 30000, // 超时时间（毫秒）
 	maxRetries: 3, // 失败自动重试次数
 });
