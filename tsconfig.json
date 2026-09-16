@@ -9,5 +9,5 @@
     "outDir": "./dist",           // 编译输出目录
     "rootDir": "./src"            // 源代码目录
   },
-  "include": ["src/**/*"]         // 包含的文件
+  "include": ["src/**/*", "scripts/**/*"]         // 包含的文件
 }

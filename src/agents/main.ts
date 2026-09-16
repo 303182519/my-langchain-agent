@@ -2,13 +2,16 @@ import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { getWeather } from "../tools/weather";
 
-const model = new ChatOpenAI({
+export const model = new ChatOpenAI({
 	model: "qwen3.8-27b",
 	apiKey: process.env.QIANWEN_API_KEY,
 	configuration: {
 		baseURL: process.env.QWEN_API_URL,
 	},
-	temperature: 0.3,
+	temperature: 0.3, // 值越高，输出越有创造性但也越不可控
+	maxTokens: 2048, // 最大输出长度
+	timeout: 30000, // 超时时间（毫秒）
+	maxRetries: 3, // 失败自动重试次数
 });
 
 export const agent = createAgent({

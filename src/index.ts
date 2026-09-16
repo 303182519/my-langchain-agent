@@ -1,5 +1,3 @@
-// src/index.ts
-
 // 第一步：加载环境变量（必须在最顶部）
 import "dotenv/config";
 
