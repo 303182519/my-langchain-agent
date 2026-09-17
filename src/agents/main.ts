@@ -56,4 +56,5 @@ export const agent = createAgent({
 	model: basicModel,
 	tools: [getWeather],
 	middleware: [dynamicModelMiddleware],
+	systemPrompt: "你是一个智能助手，能够回答用户的问题，并在需要时调用工具获取信息。",
 });

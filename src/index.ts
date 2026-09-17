@@ -5,7 +5,13 @@ import { agent } from "./agents/main";
 
 const stream = await agent.stream(
   { messages: [{ role: "user", content: "广州和深圳今天天气怎么样？" }] },
-  { streamMode: "messages" }  // 流式返回每次状态更新
+  { 
+    streamMode: "messages", // 流式返回每次状态更新
+    configurable: {
+      thread_id: "thread-123",
+      maxIterations: 3  // 限制最大工具调用次数，防止无限循环
+    }
+  },
 );
 
 // 遍历流式数据
