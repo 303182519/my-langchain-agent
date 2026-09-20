@@ -3,7 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { getWeather } from "../tools/weather";
 
 export const basicModel = new ChatOpenAI({
-	model: "qwen3.8-27b",
+	model: "qwen3.8-max-0902",
 	apiKey: process.env.QIANWEN_API_KEY,
 	configuration: {
 		baseURL: process.env.QWEN_API_URL,
@@ -16,6 +16,7 @@ export const basicModel = new ChatOpenAI({
 	timeout: 30000, // 超时时间（毫秒）
 	maxRetries: 3, // 失败自动重试次数
 });
+
 
 
 export const advancedModel = new ChatOpenAI({
@@ -44,7 +45,6 @@ export const dynamicModelMiddleware = createMiddleware({
     
     // 超过 10 条消息时，认为任务较复杂，切换到高级模型
     const selectedModel = messageCount > 10 ? advancedModel : basicModel;
-    
     console.log(`选择模型: ${selectedModel.model} (消息数: ${messageCount})`);
     
     // 用选中的模型处理请求
@@ -56,5 +56,5 @@ export const agent = createAgent({
 	model: basicModel,
 	tools: [getWeather],
 	middleware: [dynamicModelMiddleware],
-	systemPrompt: "你是一个智能助手，能够回答用户的问题，并在需要时调用工具获取信息。",
+	// systemPrompt: "你是一个智能助手，能够回答用户的问题，并在需要时调用工具获取信息。",
 });
