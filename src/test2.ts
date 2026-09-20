@@ -3,12 +3,7 @@ import "dotenv/config";
 import { StateGraph, Annotation, START, END } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph";
 import { basicModel } from "./agents/main";
-import {
-  HumanMessage,
-  AIMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
-import "dotenv/config";
+import { HumanMessage, SystemMessage, type BaseMessage } from "@langchain/core/messages";
 
 // 1. 创建组件
 const memory = new MemorySaver();
@@ -16,14 +11,17 @@ const llm = basicModel;
 
 // 2. 定义状态
 const ChatbotState = Annotation.Root({
-  messages: Annotation({
-    reducer: (prev, next) => [...prev, ...next],
+  messages: Annotation<BaseMessage[]>({
+    reducer: (prev: BaseMessage[], next: BaseMessage | BaseMessage[]) => {
+      const nextMessages = Array.isArray(next) ? next : [next];
+      return [...prev, ...nextMessages];
+    },
     default: () => [],
   }),
 });
 
 // 3. 定义聊天节点
-async function chatNode(state: any) {
+async function chatNode(state: typeof ChatbotState.State) {
   // 添加系统提示（让 AI 知道要记住上下文）
   const systemPrompt = new SystemMessage(
     "你是一个友好的助手。请记住用户在对话中提到的信息（如名字、偏好等），" +
@@ -31,10 +29,10 @@ async function chatNode(state: any) {
   );
 
   // 组合消息：系统提示 + 历史消息
-  const messagesWithSystem = [systemPrompt, ...state.messages];
+  const messagesWithSystem: BaseMessage[] = [systemPrompt, ...state.messages];
 
   const response = await llm.invoke(messagesWithSystem);
-  return { messages: [response] };
+  return { messages: [response as BaseMessage] };
 }
 
 // 4. 构建图
@@ -45,7 +43,7 @@ const chatbot = new StateGraph(ChatbotState)
   .compile({ checkpointer: memory });
 
 // 5. 对话函数
-async function chat(threadId: string,   userMessage: string) {
+async function chat(threadId: string, userMessage: string) {
   const config = { configurable: { thread_id: threadId } };
 
   const result = await chatbot.invoke(
@@ -54,8 +52,13 @@ async function chat(threadId: string,   userMessage: string) {
   );
 
   // 获取最后一条 AI 回复
-  const aiResponse = result.messages[result.messages.length - 1];
-  return aiResponse.content;
+  const aiResponse = result.messages.at(-1);
+  if (!aiResponse) {
+    throw new Error("No AI response generated");
+  }
+
+  const content = aiResponse.content;
+  return typeof content === "string" ? content : JSON.stringify(content);
 }
 
 // 6. 测试多轮对话
