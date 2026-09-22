@@ -9,6 +9,8 @@ const stream = await agent.stream(
     streamMode: "messages", // 流式返回每次状态更新
     configurable: {
       thread_id: "thread-123",
+      xxx: 123,
+      // tools: ["getWeather"], // 允许调用的工具列表
       maxIterations: 3  // 限制最大工具调用次数，防止无限循环
     }
   },
