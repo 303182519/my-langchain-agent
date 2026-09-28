@@ -38,6 +38,12 @@ async function chatNode(state: typeof ChatbotState.State) {
 
   let response: AIMessageChunk | undefined;
   for await (const chunk of await llm.stream(messagesWithSystem)) {
+
+    // 1. 实时处理 chunk
+    // 2. 发布给 SSE
+    // eventBus.publish(...);
+
+    // 3. 同时累积完整消息
     response = response ? response.concat(chunk) : chunk;
   }
 
@@ -45,6 +51,7 @@ async function chatNode(state: typeof ChatbotState.State) {
     throw new Error("No AI response generated");
   }
 
+  // 最终给 LangGraph StateGraph 返回完整消息
   return { messages: [response as BaseMessage] };
 }
 

@@ -36,6 +36,8 @@ async function chatNode(state: typeof ChatbotState.State) {
   // 组合消息：系统提示 + 历史消息
   const messagesWithSystem: BaseMessage[] = [systemPrompt, ...state.messages];
 
+
+  
   let response: AIMessageChunk | undefined;
   for await (const chunk of await llm.stream(messagesWithSystem)) {
     response = response ? response.concat(chunk) : chunk;
@@ -46,6 +48,18 @@ async function chatNode(state: typeof ChatbotState.State) {
   }
 
   return { messages: [response as BaseMessage] };
+
+  // const response = await llm.invoke(messagesWithSystem);
+
+  // return {
+  //   messages: [response],
+  // };
+
+  // if (!response) {
+  //   throw new Error("No AI response generated");
+  // }
+
+  // return { messages: [response as BaseMessage] };
 }
 
 // 4. 构建图
