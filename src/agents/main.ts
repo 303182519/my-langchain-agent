@@ -1,6 +1,11 @@
 import { createAgent, createMiddleware } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { getWeather } from "../tools/weather";
+import { MemorySaver } from "@langchain/langgraph";
+
+// 1. 创建组件
+const memory = new MemorySaver();
+
 
 export const basicModel = new ChatOpenAI({
 	model: "qwen3.8-max-0902",
@@ -56,5 +61,6 @@ export const agent = createAgent({
 	model: basicModel,
 	tools: [getWeather],
 	middleware: [dynamicModelMiddleware],
+	checkpointer: memory
 	// systemPrompt: "你是一个智能助手，能够回答用户的问题，并在需要时调用工具获取信息。",
 });

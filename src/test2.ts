@@ -48,7 +48,11 @@ async function chat(threadId: string, userMessage: string) {
 
   const result = await chatbot.invoke(
     { messages: [new HumanMessage(userMessage)] },
-    config
+    { 
+      configurable: { 
+        thread_id: threadId 
+      } 
+    }
   );
 
   // 获取最后一条 AI 回复
