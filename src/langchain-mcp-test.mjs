@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { MCPAdapter } from '@langchain/mcp-adapters';
 import { ChatOpenAI } from '@langchain/openai';
 import chalk from 'chalk';
-import { HumanMessage, ToolMessage } from '@langchain/core/messages';
+import { HumanMessage, ToolMessage, SystemMessage } from '@langchain/core/messages';
 
 const model = new ChatOpenAI({
   model: "qwen3.8-max-0902",
@@ -24,8 +24,21 @@ const adapter = new MCPAdapter({
 const tools = await adapter.listTools();
 const modelWithTools = model.bindTools(tools);
 
+const res = await adapter.listResources();
+let resourceContent = '';
+for (const [serverName, resources] of Object.entries(res)) {
+  for (const resource of resources) {
+    const content = await adapter.readResource(serverName, resource.uri);
+    resourceContent += content[0].text;
+  }
+}
+
+
 async function runAgentWithTools(query, maxIterations = 30) {
-  const messages = [new HumanMessage(query)];
+  const messages = [
+    new SystemMessage(resourceContent),
+    new HumanMessage(query)
+  ];
 
   for (let i = 0; i < maxIterations; i++) {
     console.log(chalk.bgGreen('⏳ 正在等待 AI 思考...'));
