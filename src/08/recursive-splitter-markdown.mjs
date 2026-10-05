@@ -1,88 +1,84 @@
-import "dotenv/config";
-import "cheerio";
-import { Document } from "@langchain/core/documents";
-import {
-  LatexTextSplitter,
-  RecursiveCharacterTextSplitter,
-} from "@langchain/textsplitters";
+import 'dotenv/config'
+import 'cheerio'
+import { Document } from '@langchain/core/documents'
+import { MarkdownTextSplitter } from '@langchain/textsplitters'
 
-const jsCode = `// Complete shopping cart implementation
-class Product {
-  constructor(id, name, price, description) {
-    this.id = id;
-    this.name = name;
-    this.price = price;
-    this.description = description;
+const readmeText = `# Project Name
+
+> A brief description of your project
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+## Features
+
+- ✨ Feature 1
+- 🚀 Feature 2
+- 💡 Feature 3
+
+## Installation
+
+\`\`\`bash
+npm install project-name
+\`\`\`
+
+## Usage
+
+### Basic Usage
+
+\`\`\`javascript
+import { Project } from 'project-name';
+
+const project = new Project();
+project.init();
+\`\`\`
+
+### Advanced Usage
+
+\`\`\`javascript
+const project = new Project({
+  config: {
+    apiKey: 'your-api-key',
+    timeout: 5000,
   }
-
-  getFormattedPrice() {
-    return '$' + this.price.toFixed(2);
-  }
-}
-
-class ShoppingCart {
-  constructor() {
-    this.items = [];
-    this.discountCode = null;
-    this.taxRate = 0.08;
-  }
-
-  addItem(product, quantity = 1) {
-    const existingItem = this.items.find(item => item.product.id === product.id);
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      this.items.push({ product, quantity, addedAt: new Date() });
-    }
-    return this;
-  }
-
-  removeItem(productId) {
-    this.items = this.items.filter(item => item.product.id !== productId);
-    return this;
-  }
-
-  calculateSubtotal() {
-    return this.items.reduce((total, item) => {
-      return total + (item.product.price * item.quantity);
-    }, 0);
-  }
-
-  calculateTotal() {
-    const subtotal = this.calculateSubtotal();
-    const discount = this.calculateDiscount();
-    const tax = (subtotal - discount) * this.taxRate;
-    return subtotal - discount + tax;
-  }
-
-  calculateDiscount() {
-    if (!this.discountCode) return 0;
-    const discounts = { 'SAVE10': 0.10, 'SAVE20': 0.20, 'WELCOME': 0.15 };
-    return this.calculateSubtotal() * (discounts[this.discountCode] || 0);
-  }
-}
-
-// Usage example
-const product1 = new Product(1, 'Laptop', 999.99, 'High-performance laptop');
-const product2 = new Product(2, 'Mouse', 29.99, 'Wireless mouse');
-const cart = new ShoppingCart();
-cart.addItem(product1, 1).addItem(product2, 2);
-console.log('Total:', cart.calculateTotal());`;
-
-const jsCodeDoc = new Document({
-  pageContent: jsCode,
 });
 
-const codeSplitter = RecursiveCharacterTextSplitter.fromLanguage("js", {
-  chunkSize: 300,
-  chunkOverlap: 60,
-});
+await project.run();
+\`\`\`
 
-const splitDocuments = await codeSplitter.splitDocuments([jsCodeDoc]);
+## API Reference
+
+### \`Project\`
+
+Main class for the project.
+
+#### Methods
+
+- \`init()\`: Initialize the project
+- \`run()\`: Run the project
+- \`stop()\`: Stop the project
+
+## Contributing
+
+Contributions are welcome! Please read our [contributing guide](CONTRIBUTING.md).
+
+## License
+
+MIT License`
+
+const readmeDoc = new Document({
+  pageContent: readmeText,
+})
+
+const markdownTextSplitter = new MarkdownTextSplitter({
+  chunkSize: 400,
+  chunkOverlap: 80,
+})
+
+const splitDocuments = await markdownTextSplitter.splitDocuments([readmeDoc])
 
 // console.log(splitDocuments);
 
-splitDocuments.forEach((document) => {
-  console.log(document);
-  console.log("charater length:", document.pageContent.length);
-});
+splitDocuments.forEach(document => {
+  console.log(document)
+  console.log('charater length:', document.pageContent.length)
+})
