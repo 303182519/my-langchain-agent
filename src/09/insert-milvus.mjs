@@ -31,13 +31,6 @@ const client = new MilvusClient({
   address: "localhost:19530",
 });
 
-// 把文本变成向量
-// 比如："今天天气很好，去公园散步了，心情愉快。看到了很多花开了，春天真美好。" 会变成 [0.0231, -0.8123, 0.3312, ...] 这样的向量
-async function getEmbedding(text) {
-  const result = await embeddings.embedQuery(text);
-  return result;
-}
-
 async function main() {
   try {
     console.log("Connecting to Milvus...");
@@ -137,14 +130,15 @@ async function main() {
       },
     ];
 
-    // 把文本变成向量
+    // 批量把文本变成向量，返回的向量顺序与输入文本一一对应
     console.log("Generating embeddings...");
-    const diaryData = await Promise.all(
-      diaryContents.map(async (diary) => ({
-        ...diary,
-        vector: await getEmbedding(diary.content),
-      }))
+    const vectors = await embeddings.embedDocuments(
+      diaryContents.map((diary) => diary.content)
     );
+    const diaryData = diaryContents.map((diary, index) => ({
+      ...diary,
+      vector: vectors[index],
+    }));
 
     // 插入数据
     const insertResult = await client.insert({
