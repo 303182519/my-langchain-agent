@@ -18,13 +18,9 @@ const model = new ChatOpenAI({
 
 const adapter = new MCPAdapter({
   servers: {
-    "my-mcp-server": {
-      command: "node",
-      args: ["./src/04/my-mcp-server.mjs"],
+    "my-http-mcp-server": {
+      url: process.env.MCP_SERVER_URL ?? "http://127.0.0.1:3001/mcp",
     },
-    // "amap-maps-streamableHTTP": {
-    //   url: "https://mcp.amap.com/mcp?key=" + process.env.AMAP_MAPS_API_KEY,
-    // },
     filesystem: {
       command: "npx",
       args: [
@@ -96,6 +92,6 @@ async function runAgentWithTools(query, maxIterations = 30) {
   return messages[messages.length - 1].content;
 }
 
-await runAgentWithTools("北京南站附近的酒店，最近的 3 个酒店，拿到酒店图片，打开浏览器，展示每个酒店的图片，每个 tab 一个 url 展示，并且在把那个页面标题改为酒店名");
+await runAgentWithTools("查询 ID 为 001 的用户信息");
 
 await adapter.close();
