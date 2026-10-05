@@ -9,7 +9,7 @@ import {
 } from "@langchain/core/messages";
 
 const model = new ChatOpenAI({
-  modelName: "qwen-plus",
+  modelName: process.env.MODEL_NAME,
   apiKey: process.env.OPENAI_API_KEY,
   configuration: {
     baseURL: process.env.OPENAI_BASE_URL,
@@ -20,17 +20,17 @@ const adapter = new MCPAdapter({
   servers: {
     "my-mcp-server": {
       command: "node",
-      args: ["/Users/mac/jiuci/github/aiagent/src/4/my-mcp-server.mjs"],
+      args: ["./src/04/my-mcp-server.mjs"],
     },
-    "amap-maps-streamableHTTP": {
-      url: "https://mcp.amap.com/mcp?key=" + process.env.AMAP_MAPS_API_KEY,
-    },
+    // "amap-maps-streamableHTTP": {
+    //   url: "https://mcp.amap.com/mcp?key=" + process.env.AMAP_MAPS_API_KEY,
+    // },
     filesystem: {
       command: "npx",
       args: [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/mac/jiuci/github/aiagent",
+        "./src/aiagent",
       ],
     },
     "chrome-devtools": {
