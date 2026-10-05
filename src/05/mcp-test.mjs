@@ -4,8 +4,8 @@ import { ChatOpenAI } from "@langchain/openai";
 import chalk from "chalk";
 import {
   HumanMessage,
-  ToolMessage,
   SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 
 const model = new ChatOpenAI({
@@ -18,9 +18,24 @@ const model = new ChatOpenAI({
 
 const adapter = new MCPAdapter({
   servers: {
-    'my-mcp-server': {
-      command: 'node',
-      args: ['./src/04/my-mcp-server.mjs'],
+    "my-mcp-server": {
+      command: "node",
+      args: ["/Users/mac/jiuci/github/aiagent/src/4/my-mcp-server.mjs"],
+    },
+    "amap-maps-streamableHTTP": {
+      url: "https://mcp.amap.com/mcp?key=" + process.env.AMAP_MAPS_API_KEY,
+    },
+    filesystem: {
+      command: "npx",
+      args: [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/mac/jiuci/github/aiagent",
+      ],
+    },
+    "chrome-devtools": {
+      command: "npx",
+      args: ["-y", "chrome-devtools-mcp@latest"],
     },
   },
 });
@@ -28,44 +43,15 @@ const adapter = new MCPAdapter({
 const tools = await adapter.listTools();
 const modelWithTools = model.bindTools(tools);
 
-// 读取 MCP Resource 并注入上下文
-async function loadResourceContext() {
-  // 获取所有 MCP Server 的资源列表
-  // 返回一个对象，key 是 server name，value 是资源列表
-  const res = await adapter.listResources();
-
-  let resourceContent = "";
-  for (const [serverName, resources] of Object.entries(res)) {
-    for (const resource of resources) {
-      const content = await adapter.readResource(
-        serverName,
-        resource.uri
-      );
-      resourceContent += content[0].text + "\n";
-    }
-  }
-
-  // 拼接成字符串，注入到 SystemMessage 中作为 AI 的背景知识
-  // 这样模型就能理解服务器提供了哪些功能和文档。
-  return resourceContent;
-}
-
-// Agent 执行函数
-// query: 用户查询
-// resourceContext: 资源上下文
-// maxIterations: 最大迭代次数
-async function runAgentWithTools(query, resourceContext, maxIterations = 30) {
-  const messages = [
-    new SystemMessage(resourceContext), // 注入 resource 作为上下文
-    new HumanMessage(query),
-  ];
+async function runAgentWithTools(query, maxIterations = 30) {
+  const messages = [new HumanMessage(query)];
 
   for (let i = 0; i < maxIterations; i++) {
     console.log(chalk.bgGreen(`⏳ 正在等待 AI 思考...`));
-
     const response = await modelWithTools.invoke(messages);
     messages.push(response);
 
+    // 检查是否有工具调用
     if (!response.tool_calls || response.tool_calls.length === 0) {
       console.log(`\n✨ AI 最终回复:\n${response.content}\n`);
       return response.content;
@@ -74,20 +60,32 @@ async function runAgentWithTools(query, resourceContext, maxIterations = 30) {
     console.log(
       chalk.bgBlue(`🔍 检测到 ${response.tool_calls.length} 个工具调用`)
     );
-    
     console.log(
       chalk.bgBlue(
         `🔍 工具调用: ${response.tool_calls.map((t) => t.name).join(", ")}`
       )
     );
-
+    // 执行工具调用
     for (const toolCall of response.tool_calls) {
       const foundTool = tools.find((t) => t.name === toolCall.name);
       if (foundTool) {
         const toolResult = await foundTool.invoke(toolCall.args);
+
+        // LangChain 要求 content 必须是 string，对象会导致 message.content.map is not a function
+        let contentStr;
+        if (typeof toolResult === "string") {
+          contentStr = toolResult;
+        } else if (toolResult && typeof toolResult.text === "string") {
+          contentStr = toolResult.text;
+        } else if (toolResult !== null && toolResult !== undefined) {
+          contentStr = JSON.stringify(toolResult);
+        } else {
+          contentStr = "";
+        }
+
         messages.push(
           new ToolMessage({
-            content: toolResult,
+            content: contentStr,
             tool_call_id: toolCall.id,
           })
         );
@@ -98,18 +96,6 @@ async function runAgentWithTools(query, resourceContext, maxIterations = 30) {
   return messages[messages.length - 1].content;
 }
 
-try {
-  const resourceContext = await loadResourceContext();
+await runAgentWithTools("北京南站附近的酒店，最近的 3 个酒店，拿到酒店图片，打开浏览器，展示每个酒店的图片，每个 tab 一个 url 展示，并且在把那个页面标题改为酒店名");
 
-  await runAgentWithTools(
-    "MCP Server 的使用指南是什么",
-    resourceContext
-  );
-
-  await runAgentWithTools(
-    "查一下用户 002 的信息",
-    resourceContext
-  );
-} finally {
-  await adapter.close();
-}
+await adapter.close();
