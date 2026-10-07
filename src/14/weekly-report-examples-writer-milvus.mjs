@@ -91,14 +91,6 @@ const client = new MilvusClient({
 });
 
 /**
- * 获取文本的向量嵌入
- */
-async function getEmbedding(text) {
-  const result = await embeddings.embedQuery(text);
-  return result;
-}
-
-/**
  * 创建或获取集合
  */
 async function ensureCollection() {
@@ -169,25 +161,21 @@ async function ensureCollection() {
 async function insertExamples() {
   try {
     if (EXAMPLES.length === 0) {
-      return0;
+      return 0;
     }
 
     console.log(`\n开始生成向量并插入 ${EXAMPLES.length} 条周报示例...`);
 
-    const insertData = awaitPromise.all(
-      EXAMPLES.map(async (example, index) => {
-        // 这里用 scenario + report_snippet 作为向量文本
-        const vector = await getEmbedding(
-          example.scenario + example.report_snippet
-        );
-        return {
-          id: `weekly_${index + 1}`,
-          scenario: example.scenario,
-          report_snippet: example.report_snippet,
-          vector,
-        };
-      })
+    // 批量生成向量，返回顺序与输入文本一一对应
+    const vectors = await embeddings.embedDocuments(
+      EXAMPLES.map((example) => example.scenario + example.report_snippet)
     );
+    const insertData = EXAMPLES.map((example, index) => ({
+      id: `weekly_${index + 1}`,
+      scenario: example.scenario,
+      report_snippet: example.report_snippet,
+      vector: vectors[index],
+    }));
 
     const insertResult = await client.insert({
       collection_name: COLLECTION_NAME,
