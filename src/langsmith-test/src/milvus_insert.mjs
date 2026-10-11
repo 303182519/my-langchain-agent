@@ -53,6 +53,7 @@ async function main() {
     }
 
     console.log("Generating embeddings...");
+    // 批量向量化
     const vectors = await embeddings.embedDocuments(
       chunks.map((c) => c.pageContent),
     );
