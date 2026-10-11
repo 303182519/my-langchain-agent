@@ -9,6 +9,7 @@ import {
 } from "openevals";
 import { ChatOpenAI } from "@langchain/openai";
 
+// 让另一个 LLM 当裁判（LLM-as-Judge）
 // openevals 内置了一些评估器可以用，直接引入对应的 prompt 即可，不用自己写
 const judge = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -19,10 +20,10 @@ const judge = new ChatOpenAI({
 
 // RAG_GROUNDEDNESS_PROMPT —— 忠实度：答案是否被检索上下文支撑，有无幻觉
 const ragGroundednessJudge = createLLMAsJudge({
-  prompt: RAG_GROUNDEDNESS_PROMPT,
-  feedbackKey: "rag_groundedness",
+  prompt: RAG_GROUNDEDNESS_PROMPT,  // openevals 内置的成熟评分 prompt
+  feedbackKey: "rag_groundedness",  // 分数在 LangSmith 上的指标名
   judge,
-  continuous: true,
+  continuous: true, // 输出 0~1 连续分，而非 true/false
 });
 
 // RAG_HELPFULNESS_PROMPT —— 回答有用性：是否切题、是否答非所问
