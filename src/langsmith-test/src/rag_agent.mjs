@@ -68,8 +68,14 @@ const workflow = new StateGraph(GraphState)
 
 export const ragApp = workflow.compile();
 
-export async function ask(question) {
-  const result = await ragApp.invoke({ question });
+export async function ask(question, { userId, sessionId } = {}) {
+  const result = await ragApp.invoke(
+    { question },
+    {
+      metadata: { user_id: userId, session_id: sessionId },
+      tags: ["production", "rag"],
+    },
+  );
   return {
     answer: result.answer,
     context: result.context ?? [],
